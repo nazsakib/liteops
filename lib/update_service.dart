@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class UpdateService {
   // Replace these with your actual GitHub username and Repo name
-  static const String _baseUrl = "https://your-user.github.io/liteops/version.json";
+  static const String _baseUrl = "https://nazsakib.github.io/liteops/version.json";
 
   static Future<void> checkVersion(BuildContext context) async {
     try {

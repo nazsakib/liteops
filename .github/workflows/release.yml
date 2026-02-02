@@ -1,0 +1,45 @@
+name: Build & Release
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Build APK
+        run: flutter build apk --release --build-number=${{ github.run_number }}
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          name: LiteOps v${{ github.run_number }}
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Version JSON
+        run: |
+          echo '{"version": "${{ github.run_number }}", "url": "https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/app-release.apk"}' > version.json
+          git config --global user.name "github-actions"
+          git config --global user.email "action@github.com"
+          git add version.json
+          git commit -m "Update version to ${{ github.run_number }} [skip ci]"
+          git push
