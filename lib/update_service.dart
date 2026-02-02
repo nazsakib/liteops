@@ -1,67 +1,48 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+class UpdateInfo {
+  final bool hasUpdate;
+  final String latestBuild; // Must be 'latestBuild' to match your UI
+  final String downloadUrl;
+
+  UpdateInfo({
+    required this.hasUpdate, 
+    required this.latestBuild, 
+    required this.downloadUrl
+  });
+}
 
 class UpdateService {
-  // Replace these with your actual GitHub username and Repo name
-  static const String _baseUrl = "https://nazsakib.github.io/liteops/version.json";
+  // Use your real GitHub Pages link here
+  static const String _baseUrl = "https://your-username.github.io/liteops/version.json";
 
-  static Future<void> checkVersion(BuildContext context) async {
+  static Future<UpdateInfo> getUpdateInfo() async {
     try {
       final response = await http.get(Uri.parse(_baseUrl)).timeout(const Duration(seconds: 10));
-
+      
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        int latestBuild = int.parse(data['version'].toString());
+        
+        // 1. Get build number from GitHub (e.g., "5")
+        int githubBuildNum = int.tryParse(data['version'].toString()) ?? 0;
 
-        // Get the current build number of the app on your phone
+        // 2. Get the current app's build number from your phone (e.g., "4")
         PackageInfo packageInfo = await PackageInfo.fromPlatform();
-        int currentBuild = int.parse(packageInfo.buildNumber);
+        int localBuildNum = int.tryParse(packageInfo.buildNumber) ?? 0;
 
-        if (latestBuild > currentBuild) {
-          _showUpdateDialog(context, data['url']);
-        }
+        // 3. Compare and return data using the field 'latestBuild'
+        return UpdateInfo(
+          hasUpdate: githubBuildNum > localBuildNum,
+          latestBuild: githubBuildNum.toString(), // This goes to your button text
+          downloadUrl: data['url'],
+        );
       }
     } catch (e) {
-      debugPrint("Update Check Failed: $e");
+      debugPrint("Update check failed: $e");
     }
-  }
-
-  static void _showUpdateDialog(BuildContext context, String downloadUrl) {
-    showDialog(
-      context: context,
-      barrierDismissible: false, // User must choose an option
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Row(
-          children: [
-            Icon(Icons.system_update_alt, color: Colors.blueAccent),
-            SizedBox(width: 10),
-            Text("Update Available"),
-          ],
-        ),
-        content: const Text(
-          "A new version of LiteOps is available. Please update to ensure all features work correctly.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Maybe Later", style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
-            onPressed: () async {
-              final url = Uri.parse(downloadUrl);
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              }
-            },
-            child: const Text("Update Now"),
-          ),
-        ],
-      ),
-    );
+    return UpdateInfo(hasUpdate: false, latestBuild: "0", downloadUrl: "");
   }
 }

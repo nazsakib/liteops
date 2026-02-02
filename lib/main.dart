@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'app_navigation.dart';
-// --- ADDED IMPORTS ---
-import 'update_service.dart';
 
 void main() {
   runApp(const LiteOpsApp());
@@ -48,10 +46,8 @@ class _AppInitializationWrapperState extends State<AppInitializationWrapper> {
   @override
   void initState() {
     super.initState();
-    // This triggers as soon as the app starts
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      UpdateService.checkVersion(context);
-    });
+    // Logic removed from here because AppNavigation now handles 
+    // the silent update check and the red notification dot.
   }
 
   @override
