@@ -1,18 +1,18 @@
 name: Build & Release
 on:
-    workflow_dispatch: # Allows you to run this manually from the Actions tab
+    workflow_dispatch: # Allows manual trigger from the Actions tab
     push:
         branches: [main]
         paths:
-            - "lib/**" # ONLY build if code inside lib/ changes
-            - "pubspec.yaml" # OR if you change dependencies
-            - "assets/**" # OR if you add new images/icons
+            - "lib/**" # Build only if code changes
+            - "pubspec.yaml" # Build if dependencies change
+            - "assets/**" # Build if images/icons change
 
 jobs:
     build:
         runs-on: ubuntu-latest
         permissions:
-            contents: write # Ensures the bot can commit and push version.json
+            contents: write
         steps:
             - uses: actions/checkout@v4
 
@@ -42,11 +42,10 @@ jobs:
 
             - name: Update Version JSON
               run: |
-                  # Create public folder if it doesn't exist
                   mkdir -p public
 
-                  # Update the JSON inside the public folder for Vercel deployment
-                  echo '{"version": "${{ github.run_number }}", "url": "https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/app-release.apk"}' > public/version.json
+                  # POINTING THE URL TO VERCEL INSTEAD OF GITHUB
+                  echo '{"version": "${{ github.run_number }}", "url": "https://liteops.vercel.app"}' > public/version.json
 
                   git config --global user.name "github-actions"
                   git config --global user.email "action@github.com"
