@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>LiteOps | Download</title>
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
         <style>
             :root {
                 --primary: #000000;
@@ -19,6 +20,7 @@
                 align-items: center;
                 justify-content: center;
                 height: 100vh;
+                overflow: hidden;
             }
             .container {
                 text-align: center;
@@ -29,6 +31,8 @@
                 max-width: 350px;
                 width: 90%;
                 border: 1px solid #eaeaea;
+                position: relative;
+                z-index: 10;
             }
             .logo {
                 background: var(--primary);
@@ -64,6 +68,10 @@
                 border: none;
                 width: 100%;
                 font-size: 16px;
+                transition: transform 0.1s ease;
+            }
+            .btn:active {
+                transform: scale(0.96);
             }
             .btn:disabled {
                 background: #ccc;
@@ -94,23 +102,38 @@
         <script>
             let apkUrl = "";
 
-            // 1. Fetch the JSON data but DON'T trigger download
+            // Fetch version data
             fetch("/version.json")
                 .then((response) => response.json())
                 .then((data) => {
                     apkUrl = data.url;
                     const btn = document.getElementById("download-btn");
-
-                    // 2. Enable the button and update text
                     btn.innerText = "Download APK";
                     btn.disabled = false;
                     document.getElementById("version-text").innerText =
                         "Latest Build: v" + data.version;
 
-                    // 3. Add the click listener
                     btn.addEventListener("click", () => {
                         if (apkUrl) {
-                            window.location.href = apkUrl;
+                            // 2. TRIGGER CONFETTI
+                            confetti({
+                                particleCount: 150,
+                                spread: 70,
+                                origin: { y: 0.6 },
+                                colors: ["#000000", "#ffffff", "#666666"],
+                            });
+
+                            // 3. FIXED DOWNLOAD FUNCTION
+                            // We use a hidden anchor to force the download
+                            const tempLink = document.createElement("a");
+                            tempLink.href = apkUrl;
+                            tempLink.setAttribute(
+                                "download",
+                                "liteops-latest.apk",
+                            );
+                            document.body.appendChild(tempLink);
+                            tempLink.click();
+                            document.body.removeChild(tempLink);
                         }
                     });
                 })
