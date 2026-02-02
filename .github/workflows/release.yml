@@ -1,7 +1,12 @@
 name: Build & Release
 on:
+    workflow_dispatch: # Allows you to run this manually from the Actions tab
     push:
         branches: [main]
+        paths:
+            - "lib/**" # ONLY build if code inside lib/ changes
+            - "pubspec.yaml" # OR if you change dependencies
+            - "assets/**" # OR if you add new images/icons
 
 jobs:
     build:
