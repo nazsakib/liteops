@@ -17,7 +17,7 @@ class UpdateInfo {
 
 class UpdateService {
   // Use your real GitHub Pages link here
-  static const String _baseUrl = "https://your-username.github.io/liteops/version.json";
+  static const String _baseUrl = "https://liteops.vercel.app/version.json";
 
   static Future<UpdateInfo> getUpdateInfo() async {
     try {

@@ -1,0 +1,11 @@
+{
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "public": true,
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/public/$1"
+        }
+    ]
+}
