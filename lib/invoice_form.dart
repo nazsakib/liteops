@@ -44,18 +44,48 @@ class _InvoiceFormState extends State<InvoiceForm> {
   }
 
   // --- NEW: LOAD LAST INVOICE + STOCK ---
+  // --- UPDATED: LOAD LAST INVOICE FROM SHEET + CACHE ---
   Future<void> _loadInitialData() async {
     final prefs = await SharedPreferences.getInstance();
     
-    // Load Last Invoice Number
-    final String? lastInvoice = prefs.getString('last_invoice_no');
-    if (lastInvoice != null) {
+    // 1. First, show what we have in local memory (fast UI)
+    final String? cachedInvoice = prefs.getString('last_invoice_no');
+    if (cachedInvoice != null) {
       setState(() {
-        _invoiceNoController.text = lastInvoice;
+        _invoiceNoController.text = cachedInvoice;
       });
     }
 
-    // Load Offline Stock
+    // 2. Fetch the "Real" latest invoice from Google Sheets (Source of Truth)
+    try {
+      final response = await http.get(
+        Uri.parse("$_scriptUrl?task=get_last_invoice")
+      ).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        String lastInvoiceFromSheet = response.body.trim(); // e.g., "INV-2026-003"
+        
+        // Extract number and increment it for the NEXT invoice
+        List<String> parts = lastInvoiceFromSheet.split('-');
+        if (parts.length == 3) {
+          int lastNum = int.parse(parts[2]);
+          int nextNum = lastNum + 1;
+          String nextInvoice = "${parts[0]}-${parts[1]}-${nextNum.toString().padLeft(3, '0')}";
+          
+          if (mounted) {
+            setState(() {
+              _invoiceNoController.text = nextInvoice;
+            });
+            // Update local memory with the fresh sequence
+            await prefs.setString('last_invoice_no', nextInvoice);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Syncing invoice from cloud failed: $e. Using local cache.");
+    }
+
+    // 3. Load Offline Stock
     final String? cachedData = prefs.getString('cached_products');
     if (cachedData != null) {
       var decoded = jsonDecode(cachedData) as List;
