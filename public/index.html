@@ -93,29 +93,36 @@
             <p>
                 Click below to download the latest LiteOps terminal for Android.
             </p>
-
             <button id="download-btn" class="btn" disabled>Loading...</button>
-
             <div id="version-text">Connecting to server...</div>
         </div>
 
         <script>
-            let apkUrl = "";
+            let realApkUrl = "";
 
-            // Fetch version data
             fetch("/version.json")
-                .then((response) => response.json())
+                .then((response) => {
+                    if (!response.ok)
+                        throw new Error("Network response was not ok");
+                    return response.json();
+                })
                 .then((data) => {
-                    apkUrl = data.url;
+                    // Priority 1: Use direct_url (The APK link)
+                    // Priority 2: Fallback to 'url' if direct_url is missing
+                    realApkUrl = data.direct_url || data.url;
+
                     const btn = document.getElementById("download-btn");
+                    const versionText = document.getElementById("version-text");
+
+                    // Update UI
                     btn.innerText = "Download APK";
                     btn.disabled = false;
-                    document.getElementById("version-text").innerText =
-                        "Latest Build: v" + data.version;
+                    versionText.innerText =
+                        "Latest Build: v" + (data.version || "8");
 
                     btn.addEventListener("click", () => {
-                        if (apkUrl) {
-                            // 2. TRIGGER CONFETTI
+                        if (realApkUrl) {
+                            // Trigger Celebration
                             confetti({
                                 particleCount: 150,
                                 spread: 70,
@@ -123,24 +130,21 @@
                                 colors: ["#000000", "#ffffff", "#666666"],
                             });
 
-                            // 3. FIXED DOWNLOAD FUNCTION
-                            // We use a hidden anchor to force the download
-                            const tempLink = document.createElement("a");
-                            tempLink.href = apkUrl;
-                            tempLink.setAttribute(
-                                "download",
-                                "liteops-latest.apk",
+                            // Small delay to let the user see the confetti before redirect
+                            setTimeout(() => {
+                                window.location.href = realApkUrl;
+                            }, 500);
+                        } else {
+                            alert(
+                                "Download link not found. Please try again later.",
                             );
-                            document.body.appendChild(tempLink);
-                            tempLink.click();
-                            document.body.removeChild(tempLink);
                         }
                     });
                 })
                 .catch((err) => {
                     document.getElementById("version-text").innerText =
                         "System Offline";
-                    console.error(err);
+                    console.error("LiteOps Error:", err);
                 });
         </script>
     </body>

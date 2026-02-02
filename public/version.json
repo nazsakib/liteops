@@ -1,4 +1,5 @@
 {
-  "version": "8", 
-  "url": "https://liteops.vercel.app"
+    "version": "8",
+    "url": "https://liteops.vercel.app",
+    "direct_url": "https://github.com/nazsakib/liteops/releases/download/v8/app-release.apk"
 }

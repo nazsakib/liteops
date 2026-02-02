@@ -44,8 +44,14 @@ jobs:
               run: |
                   mkdir -p public
 
-                  # POINTING THE URL TO VERCEL INSTEAD OF GITHUB
-                  echo '{"version": "${{ github.run_number }}", "url": "https://liteops.vercel.app"}' > public/version.json
+                  # We create a JSON with BOTH the landing page and the direct file link
+                  cat <<EOF > public/version.json
+                  {
+                    "version": "${{ github.run_number }}",
+                    "url": "https://liteops.vercel.app",
+                    "direct_url": "https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/app-release.apk"
+                  }
+                  EOF
 
                   git config --global user.name "github-actions"
                   git config --global user.email "action@github.com"
