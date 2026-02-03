@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_navigation.dart';
+// Ensure you import your dashboard file here
+// import 'dashboard_screen.dart'; 
 
 void main() {
   runApp(const LiteOpsApp());
@@ -15,9 +17,11 @@ class LiteOpsApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        // Using a clean, professional palette for AREEJA
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.black,
           primary: Colors.black,
+          surface: const Color(0xFFF8F9FB), // Subtle grey background for modern look
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
@@ -28,13 +32,12 @@ class LiteOpsApp extends StatelessWidget {
           ),
         ),
       ),
-      // --- UPDATED HOME ---
-      home: const AppInitializationWrapper(),
+      // --- UPDATED HOME TO SHOW DASHBOARD FIRST ---
+      home: const AppNavigation(), 
     );
   }
 }
 
-// --- NEW STATEFUL WRAPPER FOR STARTUP LOGIC ---
 class AppInitializationWrapper extends StatefulWidget {
   const AppInitializationWrapper({super.key});
 
@@ -44,15 +47,8 @@ class AppInitializationWrapper extends StatefulWidget {
 
 class _AppInitializationWrapperState extends State<AppInitializationWrapper> {
   @override
-  void initState() {
-    super.initState();
-    // Logic removed from here because AppNavigation now handles 
-    // the silent update check and the red notification dot.
-  }
-
-  @override
   Widget build(BuildContext context) {
-    // Keeps your existing navigation structure
+    // This wrapper remains as a clean entry point into your Navigation shell
     return const AppNavigation();
   }
 }

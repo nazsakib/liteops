@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'inventory_form.dart';
 import 'invoice_form.dart';
 import 'update_service.dart'; 
+import 'dashboard_screen.dart'; // Correctly imported dashboard_screen.dart
 
 class AppNavigation extends StatefulWidget {
   const AppNavigation({super.key});
@@ -13,11 +14,9 @@ class AppNavigation extends StatefulWidget {
 }
 
 class _AppNavigationState extends State<AppNavigation> {
-  int _selectedIndex = 0;
-
   // --- NEW STATE VARIABLES ---
   UpdateInfo? _updateInfo;
-  String _currentFullVersion = "Checking..."; // Updated for dynamic display
+  String _currentFullVersion = "Checking...";
 
   @override
   void initState() {
@@ -25,20 +24,17 @@ class _AppNavigationState extends State<AppNavigation> {
     _initVersionCheck();
   }
 
-  // --- UPDATED LOGIC TO FETCH VERSION + BUILD ---
   Future<void> _initVersionCheck() async {
     final info = await UpdateService.getUpdateInfo();
     final package = await PackageInfo.fromPlatform();
     if (mounted) {
       setState(() {
         _updateInfo = info;
-        // This combines version (1.0.0) and build number (5)
         _currentFullVersion = "${package.version}+${package.buildNumber}";
       });
     }
   }
 
-  // --- NEW UI FOR APP DETAILS ---
   void _showAppDetails() {
     showModalBottomSheet(
       context: context,
@@ -50,12 +46,11 @@ class _AppNavigationState extends State<AppNavigation> {
           children: [
             const Text("LiteOps", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-            const Text("Developed by Sakib MD Nazmush", style: TextStyle(color: Colors.grey)),
-            const Text("Web Application Developer | WordPress, Shopify & Automation Specialist", 
-              style: TextStyle(fontSize: 12, color: Colors.blueGrey), textAlign: TextAlign.center),
+            const Text("Smart Inventory & Business Intelligence System", style: TextStyle(color: Colors.grey)),
+            const Text("Developed by Sakib MD Nazmush", 
+              style: TextStyle(fontSize: 10, color: Colors.blueGrey), textAlign: TextAlign.center),
             const Divider(height: 30),
             
-            // DYNAMICALLY SHOWS THE INSTALLED VERSION
             Text("Installed Version: v$_currentFullVersion", style: const TextStyle(fontWeight: FontWeight.w500)),
             const SizedBox(height: 15),
 
@@ -71,7 +66,6 @@ class _AppNavigationState extends State<AppNavigation> {
                 ),
                 onPressed: () => launchUrl(Uri.parse(_updateInfo!.downloadUrl), mode: LaunchMode.externalApplication),
                 icon: const Icon(Icons.download),
-                // DYNAMICALLY SHOWS THE VERSION FROM GITHUB ON THE BUTTON
                 label: Text("Update to v${_updateInfo?.latestBuild}"),
               ),
             ] else
@@ -90,25 +84,12 @@ class _AppNavigationState extends State<AppNavigation> {
     );
   }
 
-  final List<Widget> _screens = [
-    const InventoryForm(),
-    const InvoiceForm(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
-      // --- FLOATING ACTION BUTTON WITH RED DOT ---
+      // --- UPDATED BODY: DIRECTLY LOADS DASHBOARD ---
+      body: const BusinessDashboard(),
+      
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.white,
         mini: true,
@@ -130,26 +111,7 @@ class _AppNavigationState extends State<AppNavigation> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2_outlined),
-            activeIcon: Icon(Icons.inventory_2),
-            label: 'Inventory',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
-            label: 'Invoices',
-          ),
-        ],
-      ),
+      // --- NAVIGATION BAR REMOVED ---
     );
   }
 }
