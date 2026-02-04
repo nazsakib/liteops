@@ -30,6 +30,7 @@ class _InvoiceFormState extends State<InvoiceForm> {
   double _subtotal = 0.0;
   double _totalAmount = 0.0;
   bool _isSubmitting = false;
+  bool _isSearchingCustomer = false;
 
   List<Map<String, String>> _products = []; 
   bool _isLoadingProducts = true;
@@ -43,6 +44,31 @@ class _InvoiceFormState extends State<InvoiceForm> {
     _loadInitialData(); 
   }
 
+  // --- 2. ADD THIS FUNCTION INSIDE _InvoiceFormState ---
+  Future<void> _searchCustomer(String phone) async {
+  if (phone.length != 11) return; 
+
+  setState(() => _isSearchingCustomer = true);
+  
+  try {
+    final url = Uri.parse("$_scriptUrl?task=search_customer&phone=$phone");
+    final response = await http.get(url).timeout(const Duration(seconds: 5));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['found'] == true) {
+        setState(() {
+          _customerNameController.text = data['name'] ?? "";
+          _addressController.text = data['address'] ?? "";
+        });
+      }
+    }
+  } catch (e) {
+      debugPrint("Search error: $e");
+    } finally {
+      if (mounted) setState(() => _isSearchingCustomer = false);
+    }
+  }
   // --- NEW: LOAD LAST INVOICE + STOCK ---
   // --- UPDATED: LOAD LAST INVOICE FROM SHEET + CACHE ---
   Future<void> _loadInitialData() async {
@@ -190,7 +216,7 @@ class _InvoiceFormState extends State<InvoiceForm> {
           "task": "create_invoice",
           "invoiceNo": _invoiceNoController.text,
           "customerName": _customerNameController.text,
-          "phone": _phoneController.text,
+          "phone": _phoneController.text.toString(),
           "address": _addressController.text,
           "itemName": _perfumeController.text,
           "qty": double.tryParse(_qtyController.text) ?? 0,
@@ -351,7 +377,33 @@ class _InvoiceFormState extends State<InvoiceForm> {
             const SizedBox(height: 25),
             _buildSectionTitle("Customer Details"),
             _classicField("Customer Name", Icons.person_outline, controller: _customerNameController),
-            _classicField("Phone Number", Icons.phone_android_outlined, isNumber: true, controller: _phoneController),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  _calculateTotal();
+                  // TRIGGER: If user types 11 digits, search automatically
+                  if (value.length == 11) {
+                    _searchCustomer(value);
+                  }
+                },
+                decoration: InputDecoration(
+                  labelText: "Phone Number",
+                  prefixIcon: Icon(Icons.phone_android_outlined, 
+                    size: 20, 
+                    color: _isSearchingCustomer ? Colors.blue : Colors.black54
+                  ),
+                  // Visual feedback: shows a small loader if searching
+                  suffix: _isSearchingCustomer 
+                    ? const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2)) 
+                    : null,
+                  labelStyle: const TextStyle(color: Colors.black54),
+                  border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade400)),
+                ),
+              ),
+            ),
             _classicField("Full Shipping Address", Icons.location_on_outlined, maxLines: 2, controller: _addressController),
             const SizedBox(height: 20),
             _buildSectionTitle("Product Details"),
